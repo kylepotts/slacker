@@ -29,6 +29,8 @@ defmodule Slacker do
         {:ok, auth} = Web.auth_test(state.api_token)
         Logger.info(~s/Successfully authenticated as user "#{auth.user}" on team "#{auth.team}"/)
 
+        Slacker.Users.grab_users(state.api_token)
+
         {:ok, rtm_response} = Web.rtm_start(state.api_token)
         {:ok, rtm} = Slacker.RTM.start_link(rtm_response.url, self)
 
