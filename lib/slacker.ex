@@ -1,7 +1,7 @@
 defmodule Slacker do
 
   defmodule State do
-    defstruct api_token: nil, rtm: nil, state: nil
+    defstruct api_token: nil, rtm: nil, state: nil, users: nil
   end
 
   defmacro __using__(_opts) do
@@ -18,18 +18,22 @@ defmodule Slacker do
 
       def init(api_token) do
         GenServer.cast(self, :connect)
-        {:ok, %State{api_token: api_token}}
+        users = Slacker.Users.grab_users(api_token)
+        {:ok, %State{api_token: api_token, users: users}}
       end
 
       def say(slacker, channel, message) do
         GenServer.cast(slacker, {:send_message, channel, message})
       end
 
+      def lookup_user(slacker, user_id) do
+        GenServer.call(slacker,{:lookup_user, user_id})
+      end
+
       def handle_cast(:connect, state) do
         {:ok, auth} = Web.auth_test(state.api_token)
         Logger.info(~s/Successfully authenticated as user "#{auth.user}" on team "#{auth.team}"/)
 
-        Slacker.Users.grab_users(state.api_token)
 
         {:ok, rtm_response} = Web.rtm_start(state.api_token)
         {:ok, rtm} = Slacker.RTM.start_link(rtm_response.url, self)
@@ -40,6 +44,11 @@ defmodule Slacker do
       def handle_cast({:send_message, channel, msg}, state) do
         GenServer.cast(state.rtm, {:send_message, channel, msg})
         {:noreply, state}
+      end
+
+      def handle_call(item, _from, state) do
+        IO.puts("here")
+        {:reply, "Kyle", state}
       end
     end
   end
