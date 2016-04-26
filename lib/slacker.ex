@@ -46,9 +46,8 @@ defmodule Slacker do
         {:noreply, state}
       end
 
-      def handle_call(item, _from, state) do
-        IO.puts("here")
-        {:reply, "Kyle", state}
+      def handle_call({:lookup_user, user_id}, _from, state) do
+        {:reply,"Test",state}
       end
     end
   end
